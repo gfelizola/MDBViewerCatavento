@@ -8,6 +8,7 @@
 			import mx.collections.ArrayCollection;
 			import mx.collections.HierarchicalData;
 			import mx.controls.Alert;
+			import mx.controls.dataGridClasses.DataGridColumn;
 			import mx.core.UITextField;
 			import mx.core.mx_internal;
 			
@@ -18,9 +19,15 @@
 			[Bindable]
 			private var tabelas:ArrayCollection = new ArrayCollection( new Array( 'avisos', 'editais', 'processo' ) );
 			
+			[Bindable]
+			private var dados:ArrayCollection = new ArrayCollection();
+			
 			private var currentTable:String ;
 
 			private var camposBusca:Array;
+			
+			[Bindable]
+			private var campoTitulo:String;
 	
 			public function set sqlConnection(sqlConnection:SQLConnection):void
 			{
@@ -46,19 +53,25 @@
 			{
 				if( currentTable != tabela ) currentTable = tabela ;
 				
-				var sql:String = "SELECT * FROM " + tabela;
+				
 				camposBusca = [] ;
+				campoTitulo = '' ;
 				
 				if( tabela.toLowerCase() == 'avisos' ) {
-					DataGridColumn( dg.columns[0] ).dataField = 'titDest' ;
+//					DataGridColumn( dg.columns[0] ).dataField = 'titDest' ;
+					campoTitulo = 'titDest' ;
 					camposBusca.push( 'titDest', 'txtDest' );
 				} else if( tabela.toLowerCase() == 'editais' ) {
-					DataGridColumn( dg.columns[0] ).dataField = 'titEdital' ;
+//					DataGridColumn( dg.columns[0] ).dataField = 'titEdital' ;
+					campoTitulo = 'titEdital' ;
 					camposBusca.push( 'titEdital', 'txtEdital' );
 				} else if( tabela.toLowerCase() == 'processo' ) {
-					DataGridColumn( dg.columns[0] ).dataField = 'titDest' ;
+//					DataGridColumn( dg.columns[0] ).dataField = 'titDest' ;
+					campoTitulo = 'titDest' ;
 					camposBusca.push( 'titDest', 'txtDest' );
 				}
+				
+				var sql:String = "SELECT * FROM " + tabela;
 				
 				if( busca.text != "" ){
 					sql += ' WHERE ' ;
@@ -83,7 +96,9 @@
 					var result:SQLResult = stmt.getResult();
 					var data:Array = result.data is Array ? result.data : [{rows: result.rowsAffected}];
 					
-					dg.dataProvider = data;
+					dados = new ArrayCollection(data);
+					
+					dg.dataProvider = dados;
 					dg.visible = true ;
 					if (ownTransaction) _sqlConnection.commit();
 				}
@@ -110,7 +125,7 @@
 					for (var i:int = 0; i < schemaResult.tables.length; i++) 
 					{
 						var tab:SQLTableSchema = schemaResult.tables[i] 
-						if( tab.name.toLowerCase()  == currentTable.toLowerCase() )
+						if( tab.name.toLowerCase() == currentTable.toLowerCase() )
 						{
 							montaCampos(tab);
 						}
@@ -122,6 +137,8 @@
 			{
 				var texto:String = '' ;
 				var item:Object = dg.selectedItem;
+				
+				if( item == null ) return;
 				
 				for (var i:int = 0; i < tabela.columns.length; i++) 
 				{
@@ -163,12 +180,18 @@
 				return null;
 			}
 			
+			private function lfRowNum(oItem:Object,iCol:int):String
+			{
+				var iIndex:int = dados.getItemIndex(oItem) + 1;
+				return String(iIndex);
+			}
+			
 		]]>
 	</mx:Script>
 
 	<mx:ApplicationControlBar width="100%">
 		<mx:Button label="Ver todas as compras e contratações" click="openAvisos(event)"/>
-		<mx:Button label="Ver todos os processos seletivos" click="openEditais(event)"/>
+		<mx:Button label="Ver todos os editais" click="openEditais(event)"/>
 		<mx:Button label="Ver todos os processos seletivos" click="openProcessos(event)"/>
 	</mx:ApplicationControlBar>
 	
@@ -179,7 +202,8 @@
 	
 	<mx:DataGrid id="dg" width="100%" height="100%" top="80" click="onItemClick(event)">
 		<mx:columns>
-			<mx:DataGridColumn headerText="Título"/>
+			<mx:DataGridColumn headerText="#" width="20" labelFunction="lfRowNum" />
+			<mx:DataGridColumn headerText="Título" dataField="{campoTitulo}" />
 		</mx:columns>
 	</mx:DataGrid>
 	
