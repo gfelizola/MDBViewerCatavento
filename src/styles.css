@@ -1,0 +1,39 @@
+@font-face
+{
+    src: url("assets/fonts/MyriadWebPro.ttf");
+    font-family: main;
+    font-style: normal;
+    font-weight: normal;
+}
+
+@font-face
+{
+    src: url("assets/fonts/MyriadWebPro-Bold.ttf");
+    font-family: main;
+    font-style: normal;
+    font-weight: bold;
+}
+
+/*
+ApplicationControlBar {
+	corner-radius: 0;	
+}
+
+WindowedApplication {
+	font-family: main;
+	font-size: 11;
+}
+
+Window {
+	font-family: main;
+	font-size: 11;
+}
+*/
+.bigButton {
+	font-size: 12;
+}
+
+.bigTitle {
+	font-size: 24;
+	font-weight: bold;
+}

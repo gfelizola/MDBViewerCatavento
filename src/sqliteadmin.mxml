@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="*"
+	layout="absolute" width="700" height="500"
+	title="MDBViewer"
+	showStatusBar="false"
+	creationComplete="initApp()">
+
+	<mx:Script>
+		<![CDATA[
+			import flash.data.SQLConnection;
+			import flash.filesystem.File;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			
+			private var sqlConnection:SQLConnection = new SQLConnection();
+
+			private var npInfo:NativeProcessStartupInfo;
+			private var nativeProcess:NativeProcess;
+
+			private var fjava:File;
+			private var fileMDB:File;
+			private var fileSQL:File;
+			private var fileBanco:File;
+			
+			private function initApp():void
+			{
+				// Read the recently accessed database files from the cache
+				var files:ArrayCollection = new ArrayCollection(Cache.instance.files);
+				files.addItemAt({path:"Bancos de dados recentes"}, 0);
+				dbFiles.dataProvider = files;
+				
+				fileMDB = File.applicationDirectory.resolvePath("catavento2.sqlite");
+				
+				if( fileMDB.exists ){
+					openDatabase(fileMDB);
+				}
+			}
+			
+			private function browseForExistingDatabase():void
+			{
+				
+				
+				fileMDB.browseForOpen("Selecione um banco de dados para abrir");
+				fileMDB.addEventListener(Event.SELECT, function (event:Event):void
+				{
+					if( fileMDB.extension == 'sqlite' ){
+						openDatabase(fileMDB);
+					}
+					
+//					var arg:Vector.<String> = new Vector.<String>;
+//					arg.push("-jar");
+//					arg.push(File.applicationDirectory.resolvePath("mdb-sqlite.jar").nativePath);
+//					arg.push(fileMDB.nativePath);
+//					
+//					var nomeBanco:String = File.applicationStorageDirectory.resolvePath(fileMDB.name).nativePath ;
+//					nomeBanco = nomeBanco.substr( 0, nomeBanco.length - 4 ) + '.sqlite' ;
+//					fileSQL = File.applicationStorageDirectory.resolvePath( nomeBanco );
+//					
+//					arg.push( fileSQL.nativePath );
+//					
+//					trace( arg );
+//					
+//					if( Capabilities.os.toLowerCase().indexOf('mac') != -1 )
+//					{
+//						fjava = new File("/System/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Home/bin/java");
+//					}
+//					else
+//					{
+//						fjava = new File("C:\Program Files\Java\jdk1.7.0\bin\java");
+//					}
+//					
+//					if (! fjava.exists ){
+////						Alert.show("Não foi possível encontrar Java Runtime. Deseja buscar?","",Alert.YES|Alert.NO, this, onNotJavaFind, null, Alert.YES);
+//						return;
+//					}
+//					
+//					npInfo = new NativeProcessStartupInfo();
+//					npInfo.executable = fjava;
+//					npInfo.arguments = arg;
+//					
+//					nativeProcess = new NativeProcess();
+//					nativeProcess.addEventListener(NativeProcessExitEvent.EXIT,onNativeProcessExit);
+//					nativeProcess.addEventListener(ProgressEvent.STANDARD_OUTPUT_DATA, outputDataHandler);
+//					nativeProcess.addEventListener(ProgressEvent.STANDARD_ERROR_DATA, outputDataHandler);
+//					nativeProcess.start(npInfo);
+				});
+			}		
+
+			private function openDatabase(file:File):void
+			{
+				sqlConnection.open(file);
+				var path:String = file.nativePath;
+				title = "MDBViewer - " + path;
+				Cache.instance.cacheFile(path);
+				mainPanel.sqlConnection = sqlConnection;
+	        	vs.selectedIndex=1;
+			}	
+			
+			private function onNotJavaFind(e:CloseEvent):void
+			{
+				if( e.detail == Alert.YES )
+				{
+					fjava.addEventListener(Event.SELECT, onJavaSelect);
+					fjava.browseForOpen("Pasta do java (bin/java.exe)");
+				}
+				else
+				{
+					Alert.show("É necessário converter o banco para ser aberto pelo programa", "Aviso", Alert.OK);
+				}
+			}
+			
+			private function onJavaSelect(e:Event):void
+			{
+				npInfo.executable = e.target as File ;
+				nativeProcess.start(npInfo);
+			}
+			
+			private function onNativeProcessExit(e:NativeProcessExitEvent):void
+			{
+				
+			}
+			
+			private function outputDataHandler(e:ProgressEvent):void
+			{
+				var output:String = "Conversão: ";
+				if( e.type == ProgressEvent.STANDARD_OUTPUT_DATA ) {
+					output += nativeProcess.standardOutput.readUTFBytes( nativeProcess.standardOutput.bytesAvailable );
+				} else {
+					output += nativeProcess.standardError.readUTFBytes( nativeProcess.standardError.bytesAvailable );
+				}
+				
+				if (output.indexOf('NullPointerException') != -1) 
+				{
+					output = "Conversão realizada com sucesso." ;
+				}
+				
+				Alert.show(output, "Resultado da conversão", Alert.OK, null, onOutputOk);
+			}
+			
+			private function onOutputOk(e:CloseEvent):void
+			{
+				fileSQL = File.applicationStorageDirectory.resolvePath(fileSQL.nativePath) ;
+				trace( fileSQL.nativePath, fileSQL.exists );
+				openDatabase(fileSQL);
+			}
+			
+		]]>
+	</mx:Script>
+
+	<mx:Style source="styles.css"/>
+
+	<mx:ViewStack id="vs" width="100%" height="100%" creationPolicy="all">
+		
+		<mx:Canvas width="100%" height="100%">
+
+			<mx:Label text="MDB Catavento" styleName="bigTitle" 
+				horizontalCenter="0"
+				verticalCenter="-100"/>
+		
+			<mx:Button label="Abrir arquivo"
+				styleName="bigButton" 
+				horizontalCenter="0"
+				verticalCenter="-40"
+				width="250"
+				height="32"
+				id="btnAbrir"
+				click="browseForExistingDatabase()"/>
+			
+			<mx:ComboBox id="dbFiles" 
+						 openDuration="0"
+						 labelField="path"  
+						 horizontalCenter="0" 
+						 verticalCenter="0"
+						 height="32"
+						 dataChange="{btnAbrir.width=dbFiles.width}"
+						 change="openDatabase(new File(dbFiles.selectedItem.path))"/>
+			
+		</mx:Canvas>
+		
+		<local:MainPanel id="mainPanel" width="100%" height="100%"/>
+
+	</mx:ViewStack>
+
+</mx:WindowedApplication>

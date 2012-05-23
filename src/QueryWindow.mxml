@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Window xmlns:mx="http://www.adobe.com/2006/mxml" xmlns="*" width="700" height="450"
+	contextMenu="{new ContextMenu()}"
+	showStatusBar="false"
+	title="Dados" creationComplete="init()" xmlns:s="library://ns.adobe.com/flex/spark" >
+
+	<mx:Script>
+		<![CDATA[
+			import flash.data.SQLStatement;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.controls.dataGridClasses.DataGridColumn;
+			import mx.core.UITextField;
+			import mx.events.FlexEvent;
+			
+			/*
+		public var sqlConnection:SQLConnection;
+		
+		public var tabela:String;
+			
+		private var dg:DataGrid;
+		
+		public function executeQuery(ownTransaction:Boolean = true):Boolean
+		{
+			var sql:String = "SELECT * FROM " + tabela;
+			var camposBusca:Array = [] ;
+			
+			if( tabela.toLowerCase() == 'avisos' ) {
+				dg = dgAvisos ;
+				camposBusca.push( 'titDest', 'txtDest' );
+			} else if( tabela.toLowerCase() == 'editais' ) {
+				dg = dgEditais ;
+				camposBusca.push( 'titEdital', 'txtEdital' );
+			} else if( tabela.toLowerCase() == 'processo' ) {
+				dg = dgProcessos ;
+				camposBusca.push( 'titDest', 'txtDest' );
+			}
+			
+			if( busca.text != "" ){
+				sql += ' WHERE ' ;
+				for (var i:int = 0; i < camposBusca.length; i++) 
+				{
+					sql += camposBusca[i] + ' LIKE "%' + busca.text + '%"' ;
+					if( i < camposBusca.length - 1 ) sql += ' OR ' ;
+				}
+				
+			}
+			
+			trace( sql );
+			
+			var stmt:SQLStatement = new SQLStatement();
+        	stmt.sqlConnection = sqlConnection;
+			stmt.text = sql;
+			if (ownTransaction) sqlConnection.begin(SQLTransactionLockType.IMMEDIATE);
+			try
+			{
+	        	stmt.execute();
+				var result:SQLResult = stmt.getResult();
+				var data:Array = result.data is Array ? result.data : [{rows: result.rowsAffected}];
+				
+				dg.dataProvider = data;
+				dg.visible = true ;
+	        	if (ownTransaction) sqlConnection.commit();
+	  		}
+	  		catch (error:SQLError)
+	  		{
+    			Alert.show(error.message, "Error", 4.0, this);
+	        	if (ownTransaction) sqlConnection.rollback();
+	        	return false;
+	  		}
+			return true;
+        }
+			
+		private function atualizarDados():void
+		{
+//			asdf
+		}
+			
+		private function initQuery(event:FlexEvent):void
+		{
+			title = "Dados - " + tabela ;
+			executeQuery();
+		}
+			
+		private function onBuscaChange(e:Event):void
+		{
+			executeQuery();
+		}
+			*/
+			
+			[Bindable]
+			public var texto:String = '' ;
+			
+			private function init():void
+			{
+//				while (dados.numChildren) dados.removeChildAt(0);
+				
+				var tf:UITextField = new UITextField();
+				tf.htmlText = texto ; 
+				tf.autoSize = TextFieldAutoSize.LEFT ;
+				tf.wordWrap = true ;
+				
+//				dados.htmlText = texto ;
+			}
+			
+		]]>
+	</mx:Script>
+
+	<mx:Style source="styles.css"/>
+	
+	<!-- mx:Canvas width="100%" height="100%" y="30" x="0">
+		<mx:ApplicationControlBar width="100%">
+			<mx:Label x="0" y="0" width="50" height="25" text="Buscar: " />
+			<mx:TextInput id="busca" x="50" y="0" width="400" height="25" change="onBuscaChange(event)" />
+		</mx:ApplicationControlBar>
+		
+		<mx:DataGrid id="dgAvisos" top="50" width="100%" height="100%" visible="false">
+			<mx:columns>
+				<mx:DataGridColumn dataField="ID" headerText="Código" width="50" />
+				<mx:DataGridColumn dataField="dataFecha" headerText="Data de Fechamento" width="100" />
+				<mx:DataGridColumn dataField="arquivos" headerText="Arquivos" width="100" />
+				<mx:DataGridColumn dataField="titDest" headerText="Título" width="280" />
+				<mx:DataGridColumn dataField="txtDest" headerText="Descrição">
+					<mx:itemRenderer>
+						<mx:Component >
+							<mx:Text height="100"
+									 htmlText="{data.txtDest}" />
+						</mx:Component>
+					</mx:itemRenderer>
+				</mx:DataGridColumn>
+			</mx:columns>
+		</mx:DataGrid>
+	
+		<mx:DataGrid id="dgEditais" top="50" width="100%" height="100%" visible="false">
+			<mx:columns>
+				<mx:DataGridColumn dataField="ID" headerText="Código" width="50" />
+				<mx:DataGridColumn dataField="dtEdital" headerText="Data do Edital" width="100" />
+				<mx:DataGridColumn dataField="dtAprovEdital" headerText="Data de Aprovação" width="100" />
+				<mx:DataGridColumn dataField="titEdital" headerText="Título" width="280" />
+				<mx:DataGridColumn dataField="txtEdital" headerText="Descrição" />
+			</mx:columns>
+		</mx:DataGrid>
+	
+		<mx:DataGrid id="dgProcessos" top="50" width="100%" height="100%" visible="false">
+			<mx:columns>
+				<mx:DataGridColumn dataField="ID" headerText="Código" width="50" />
+				<mx:DataGridColumn dataField="dataFecha" headerText="Data de Fechamento" width="100" />
+				<mx:DataGridColumn dataField="titDest" headerText="Título" width="280" />
+				<mx:DataGridColumn dataField="txtDest" headerText="Descrição">
+					<mx:itemRenderer>
+						<mx:Component >
+							<mx:Text height="100"
+									 htmlText="{data.txtDest}" />
+						</mx:Component>
+					</mx:itemRenderer>
+				</mx:DataGridColumn>
+			</mx:columns>
+		</mx:DataGrid>
+	
+	</mx:Canvas -->
+	
+	<mx:Text id="dados" htmlText="{texto}" width="100%" />
+</mx:Window>

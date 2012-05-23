@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+		   xmlns:s="library://ns.adobe.com/flex/spark"
+		   minWidth="700" minHeight="500"> 
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.collections.HierarchicalData;
+			import mx.controls.Alert;
+			import mx.core.UITextField;
+			import mx.core.mx_internal;
+			
+			import spark.components.Label;
+			
+			private var _sqlConnection:SQLConnection;
+			
+			[Bindable]
+			private var tabelas:ArrayCollection = new ArrayCollection( new Array( 'avisos', 'editais', 'processo' ) );
+			
+			private var currentTable:String ;
+
+			private var camposBusca:Array;
+	
+			public function set sqlConnection(sqlConnection:SQLConnection):void
+			{
+				_sqlConnection = sqlConnection;
+			}
+			
+			private function openAvisos(e:MouseEvent):void
+			{
+				executeQuery('avisos');
+			}
+			
+			private function openEditais(e:MouseEvent):void
+			{
+				executeQuery('editais');
+			}
+			
+			private function openProcessos(e:MouseEvent):void
+			{
+				executeQuery('processo');
+			}
+			
+			public function executeQuery(tabela:String, ownTransaction:Boolean = true):Boolean
+			{
+				if( currentTable != tabela ) currentTable = tabela ;
+				
+				var sql:String = "SELECT * FROM " + tabela;
+				camposBusca = [] ;
+				
+				if( tabela.toLowerCase() == 'avisos' ) {
+					DataGridColumn( dg.columns[0] ).dataField = 'titDest' ;
+					camposBusca.push( 'titDest', 'txtDest' );
+				} else if( tabela.toLowerCase() == 'editais' ) {
+					DataGridColumn( dg.columns[0] ).dataField = 'titEdital' ;
+					camposBusca.push( 'titEdital', 'txtEdital' );
+				} else if( tabela.toLowerCase() == 'processo' ) {
+					DataGridColumn( dg.columns[0] ).dataField = 'titDest' ;
+					camposBusca.push( 'titDest', 'txtDest' );
+				}
+				
+				if( busca.text != "" ){
+					sql += ' WHERE ' ;
+					for (var i:int = 0; i < camposBusca.length; i++) 
+					{
+						sql += camposBusca[i] + ' LIKE "%' + busca.text + '%"' ;
+						if( i < camposBusca.length - 1 ) sql += ' OR ' ;
+					}
+					
+				}
+				
+				trace( sql );
+				
+				var stmt:SQLStatement = new SQLStatement();
+				stmt.sqlConnection = _sqlConnection;
+				stmt.text = sql;
+				if (ownTransaction) _sqlConnection.begin(SQLTransactionLockType.IMMEDIATE);
+				
+				try
+				{
+					stmt.execute();
+					var result:SQLResult = stmt.getResult();
+					var data:Array = result.data is Array ? result.data : [{rows: result.rowsAffected}];
+					
+					dg.dataProvider = data;
+					dg.visible = true ;
+					if (ownTransaction) _sqlConnection.commit();
+				}
+				catch (error:SQLError)
+				{
+					Alert.show(error.message, "Error", 4.0, this);
+					if (ownTransaction) _sqlConnection.rollback();
+					return false;
+				}
+				return true;
+			}
+			
+			private function onBuscaChange(e:Event):void
+			{
+				executeQuery(currentTable);
+			}
+			
+			private function onItemClick(e:MouseEvent):void
+			{
+				_sqlConnection.loadSchema();
+				var schemaResult:SQLSchemaResult = _sqlConnection.getSchemaResult();
+				if (schemaResult)
+				{
+					for (var i:int = 0; i < schemaResult.tables.length; i++) 
+					{
+						var tab:SQLTableSchema = schemaResult.tables[i] 
+						if( tab.name.toLowerCase()  == currentTable.toLowerCase() )
+						{
+							montaCampos(tab);
+						}
+					}
+				}
+			}
+			
+			private function montaCampos(tabela:SQLTableSchema):void
+			{
+				var texto:String = '' ;
+				var item:Object = dg.selectedItem;
+				
+				for (var i:int = 0; i < tabela.columns.length; i++) 
+				{
+					var c:SQLColumnSchema = SQLColumnSchema(tabela.columns[i]) ;
+					var t:String = '' ;
+					if( tratarNomeColuna(c.name).indexOf('Data') >= 0 ){
+						if( String(item[c.name]).toLowerCase().indexOf('inval') < 0 ){
+							t = '<b>' + tratarNomeColuna(c.name) + ': </b> ' + item[c.name] + '<br /><br />' ;
+						}
+					} else {
+						if( item[c.name] != null ){
+							t = '<b>' + tratarNomeColuna(c.name) + ': </b> ' + item[c.name] + '<br /><br />' ;
+						}
+					}
+					texto += t ;
+				}
+				
+				var qw:QueryWindow = new QueryWindow();
+				qw.texto = texto ;				
+				qw.open();
+			}
+			
+			private function tratarNomeColuna(c:String):String
+			{
+				if( c.toLowerCase().indexOf('txt') >= 0 ){
+					return 'Descrição';
+				} else if( c.toLowerCase().indexOf('tit') >= 0 ){
+					return 'Título';
+				} else if( c.toLowerCase().indexOf('data') >= 0 ){
+					return 'Data '  + c.replace('data','').replace('Data','');
+				} else if( c.toLowerCase().indexOf('dt') >= 0 ){
+					return 'Data '  + c.replace('dt','').replace('dt','');
+				} else if( c.toLowerCase().indexOf('id') >= 0 ){
+					return 'Código';
+				} else if( c.toLowerCase().indexOf('arquivos') >= 0 ){
+					return 'Arquivos';
+				}
+				
+				return null;
+			}
+			
+		]]>
+	</mx:Script>
+
+	<mx:ApplicationControlBar width="100%">
+		<mx:Button label="Ver todas as compras e contratações" click="openAvisos(event)"/>
+		<mx:Button label="Ver todos os processos seletivos" click="openEditais(event)"/>
+		<mx:Button label="Ver todos os processos seletivos" click="openProcessos(event)"/>
+	</mx:ApplicationControlBar>
+	
+	<mx:Canvas width="100%" height="40" top="40">
+		<mx:Label x="0" y="0" width="50" height="25" text="Buscar: " />
+		<mx:TextInput id="busca" x="50" y="0" width="400" height="25" change="onBuscaChange(event)" />
+	</mx:Canvas>
+	
+	<mx:DataGrid id="dg" width="100%" height="100%" top="80" click="onItemClick(event)">
+		<mx:columns>
+			<mx:DataGridColumn headerText="Título"/>
+		</mx:columns>
+	</mx:DataGrid>
+	
+</mx:Canvas>
