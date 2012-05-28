@@ -96,10 +96,12 @@
 			{
 //				while (dados.numChildren) dados.removeChildAt(0);
 				
-				var tf:UITextField = new UITextField();
-				tf.htmlText = texto ; 
-				tf.autoSize = TextFieldAutoSize.LEFT ;
-				tf.wordWrap = true ;
+//				var tf:UITextField = new UITextField();
+//				tf.htmlText = texto ; 
+//				tf.autoSize = TextFieldAutoSize.LEFT ;
+//				tf.wordWrap = true ;
+				
+//				trace( texto );
 				
 //				dados.htmlText = texto ;
 			}
@@ -158,7 +160,8 @@
 			</mx:columns>
 		</mx:DataGrid>
 	
-	</mx:Canvas -->
+	</mx:Canvas>
 	
-	<mx:Text id="dados" htmlText="{texto}" width="100%" />
+	<mx:Text id="dados" width="100%" / -->
+	<mx:HTML id="teste" htmlText="{texto}" width="100%" height="100%" />
 </mx:Window>
